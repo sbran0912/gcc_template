@@ -26,7 +26,6 @@ else
 endif
 
 # Define Compiler flags:
-echo "BUILD_MODE = $(BUILD_MODE)"
 CFLAGS = -Wall -std=c11
 ifeq ($(BUILD_MODE),DEBUG)
     CFLAGS += -g -O0
