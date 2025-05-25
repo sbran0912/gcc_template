@@ -1,0 +1,123 @@
+#include "lib_core.h"
+
+typedef struct vehicle_t {
+    Vector2 location;
+    Vector2 velocity;
+    Vector2 accel;
+    float radius;
+    float max_steer;
+    float max_desired;
+} Vehicle;
+
+typedef struct path_t {
+    float radius;
+    Vector2 start;
+    Vector2 end;
+} Path;
+
+Vector2 getNormalPoint(Vector2 position, Vector2 a, Vector2 b) {
+    Vector2 a_to_position= vec2_sub(position, a);
+    Vector2 a_to_b = vec2_sub(b, a);
+    a_to_b = vec2_norm(a_to_b);
+    float sp = vec2_dot(a_to_position, a_to_b);
+    a_to_b = vec2_scale(a_to_b, sp);
+    Vector2 result = vec2_add(a, a_to_b);
+    return result;
+}
+
+void applyForce(Vehicle *vehic, Vector2 force) {
+    vehic->accel = vec2_add(vehic->accel, vec2_div(force, vehic->radius*2));
+}
+
+Vehicle createVehicle(float x, float y, float r) {
+    Vehicle result = {
+        .location = {x, y},
+        .radius = r,
+        .velocity = {0, 0},
+        .accel = {0, 0},
+        .max_steer = 8.0f,
+        .max_desired = 8.0f
+        };
+    return result;
+} 
+
+Path createPath() {
+    Path result = {
+        .radius = 30,
+        .start = {0, 400},
+        .end = {1600, 400} 
+    };
+    return result;
+}
+
+void seek(Vehicle* vehic, Vector2 target) {
+    //float zone = 300.0f;
+    Vector2 desired = vec2_sub(target, vehic->location);
+    float distance = vec2_mag(desired);
+    desired = vec2_scale(vec2_norm(desired), vehic->max_desired);
+    Vector2 steer = vec2_limit(vec2_sub(desired, vehic->velocity), vehic->max_steer);
+    applyForce(vehic, steer);
+}
+
+void showPath(Path* p) {
+    DrawLineEx(p->start, p->end, p->radius * 2, GRAY);
+    DrawLineEx(p->start, p->end, 2, YELLOW);
+
+}
+
+void followPath(Vehicle* vehic, Path* path) {
+    Vector2 future = vehic->velocity;
+    future = vec2_setMag(future, 40);
+    vec2_add(future, vehic->location); //vehicles future location
+    Vector2 normalPoint = getNormalPoint(vehic->location, path->start, path->end);
+    //move a little further along the path
+    Vector2 pathline = vec2_sub(path->end, path->start);
+    pathline = vec2_setMag(pathline, 40);
+    Vector2 target = vec2_add(normalPoint, pathline);
+    float distance = vec2_dist(normalPoint, future);
+    if (distance > path->radius) {
+        seek(vehic, target);
+    }
+
+}
+
+void updateVehicle(Vehicle* vehic) {
+    vehic->velocity = vec2_add(vehic->velocity, vehic->accel);
+    vehic->velocity = vec2_limit(vehic->velocity, 10.0f);
+    vehic->accel =(Vector2){0.0f, 0.0f};
+    vehic->location = vec2_add(vehic->location, vehic->velocity);
+}
+
+void drawVehicle(Vehicle* vehic, Color c1, Color c2) {
+    Vector2 orientation = vehic->velocity;
+    orientation = vec2_setMag(orientation, vehic->radius * 1.4f);
+    DrawRing(vehic->location, vehic->radius - 3, vehic->radius, 0, 360, 1, c1);
+    DrawLineEx(vehic->location, vec2_add(vehic->location, orientation), 2, c2);
+}
+
+int main() {
+    const int screenWidth = 1600;
+    const int screenHeight = 1200; 
+
+    InitWindow(screenWidth, screenHeight, "Following path");
+    SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
+
+    Vehicle mover = createVehicle(400, 200, 20);
+    mover.velocity = (Vector2){4, 0};
+    Path path = createPath();
+
+    // Main game loop
+    while (!WindowShouldClose()) {
+        BeginDrawing();
+        ClearBackground(DARKBLUE);
+        showPath(&path);
+        drawVehicle(&mover, YELLOW, RED);
+        followPath(&mover, &path);
+        updateVehicle(&mover);
+    	EndDrawing();
+    }
+
+    CloseWindow();   
+
+    return EXIT_SUCCESS;
+}
