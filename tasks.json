@@ -8,25 +8,39 @@
             "type": "process",
             "command": "make BUILD_MODE=DEBUG",
             "windows": {
-                "command": "C:/Users/sbran/w64devkit/bin/make.exe BUILD_MODE=DEBUG"
+                "command": "C:/Users/sbran/w64devkit/bin/make.exe",
+                "args": ["BUILD_MODE=DEBUG"]
             },
             "group": {
                 "kind": "build",
-                "isDefault": true
+                "isDefault": false
             }
         },
-                {
+        {
             "label": "build release",
             "type": "process",
             "command": "make BUILD_MODE=RELEASE",
             "windows": {
-                "command": "C:/Users/sbran/w64devkit/bin/make.exe BUILD_MODE=RELEASE"
+                "command": "C:/Users/sbran/w64devkit/bin/make.exe",
+                "args": ["BUILD_MODE=RELEASE"]
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+        {
+            "label": "build clean",
+            "type": "process",
+            "command": "make clean",
+            "windows": {
+                "command": "C:/Users/sbran/w64devkit/bin/make.exe",
+                "args": ["clean"]
             },
             "group": {
                 "kind": "build",
                 "isDefault": false
             }
         }
-
     ]
 }
